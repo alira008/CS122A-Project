@@ -10,20 +10,13 @@
 #include <avr/io.h>
 #include "timer.h"
 #include "scheduler.h"
-//#ifdef _SIMULATE_
-//#include "simAVRHeader.h"
-//#endif
 
-#define IN1 0x10
-#define IN2 0x20
-#define IN3 0x40
-#define IN4 0x80
-
-unsigned char fullStep1[] = {IN1, IN2, IN3, IN4};
-unsigned char fullStep2[] = {IN2, IN3, IN4, IN1};
 unsigned char count = 0;
 
+//========================================================================
 
+
+//========================================================================
 enum StepperMotor_States { StepperWait, StepperRotateCW, StepperRotateCCW};
 
 int StepperMotorTick(int state){
@@ -47,13 +40,37 @@ int StepperMotorTick(int state){
 	//	State Actions
 	switch(state){
 		case StepperRotateCW:
-			if(count >= 3){
-				PORTA = fullStep1[count] | fullStep2[count];
-				count = 0;
+			if(count == 0){
+				PORTA = 0x90;
+				count++;
+			}
+			else if(count == 1){
+				PORTA = 0x80;
+				count++;
+			}
+			else if(count == 2){
+				PORTA = 0xC0;
+				count++;
+			}
+			else if(count == 3){
+				PORTA = 0x40;
+				count++;
+			}
+			else if(count == 4){
+				PORTA = 0x06;
+				count++;
+			}
+			else if(count == 5){
+				PORTA = 0x20;
+				count++;
+			}
+			else if(count == 6){
+				PORTA = 0x30;
+				count++;
 			}
 			else{
-				PORTA = fullStep1[count] | fullStep2[count];
-				count++;
+				PORTA = 0x10;
+				count = 0;
 			}
 			break;
 	}
@@ -65,7 +82,7 @@ int main(void) {
   
 	DDRA = 0xF0; PORTA = 0x0F;		//	Setting first four pins to input and last four pins are output
 
-	unsigned long int StepperMotorTick_calc = 1000;
+	unsigned long int StepperMotorTick_calc = 1;
 
 	// Calculate GCD
 	unsigned long int tmpGCD = StepperMotorTick_calc;
