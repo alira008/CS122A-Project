@@ -12,7 +12,8 @@
 #include "timer.h"
 #include "usart_ATmega1284.h"
 
-//========================= Shared Variables =============================
+//========================= Shared Variables ==============================
+
 unsigned char receivedValue = 0x00;
 
 //========================= USART State Machine ===========================
@@ -28,6 +29,7 @@ int ReceiveTick(int state) {
 			}
 			else{
 				state = ReceiveWait;
+				PORTA = 0x00;
 			}
 			break;
 		case ReceiveData:
@@ -42,8 +44,9 @@ int ReceiveTick(int state) {
 		case ReceiveWait:
 			break;
 		case ReceiveData:
-			receivedValue = USART_Receive(0);
+			PORTB = USART_Receive(0);
 			USART_Flush(0);
+			PORTA = 0x04;
 			break;
 	}
 	return state;
@@ -58,6 +61,7 @@ int DisplayLEDsTick(int state){
 	switch(state){
 		case DisplayLEDs:
 			state = DisplayLEDs;
+			break;
 		default:
 			state = DisplayLEDs;
 			break;
@@ -65,7 +69,7 @@ int DisplayLEDsTick(int state){
 	//	State Actions
 	switch(state){
 		case DisplayLEDs:
-			PORTB = receivedValue;
+			//PORTB = receivedValue;
 			break;
 	}
 	return state;
@@ -74,12 +78,13 @@ int DisplayLEDsTick(int state){
 //========================================================================
 
 int main(void) {
+	DDRA = 0xFF; PORTA = 0x00;
 	DDRB = 0xFF; PORTB = 0x00;
 
  	initUSART(0);
 
-	unsigned long int DisplayLEDsTick_calc = 1000;
-	unsigned long int ReceiveTick_calc = 50;
+	unsigned long int DisplayLEDsTick_calc = 500;
+	unsigned long int ReceiveTick_calc = 500;
 
 	// Calculate GCD
 	unsigned long int tmpGCD = findGCD(DisplayLEDsTick_calc, ReceiveTick_calc);

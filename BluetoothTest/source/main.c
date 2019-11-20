@@ -39,13 +39,13 @@ int BlinkLEDsTick(int state){
 	//	State Actions
 	switch(state){
 		case LED1:
-			LEDs = 0x01;
+			transmitValue = 0x01;
 			break;
 		case LED2:
-			LEDs = 0x02;
+			transmitValue = 0x02;
 			break;
 		case LED3:
-			LEDs = 0x04;
+			transmitValue = 0x04;
 			break;
 	}
 	return state;
@@ -56,18 +56,21 @@ int BlinkLEDsTick(int state){
 enum TransmitData_States {TransmitData_Wait, TransmitData_Write, TransmitData_Complete};
 
 int TransmitDataTick(int state){
-	transmitValue = LEDs;
     //	State Transitions
     switch(state){
 		case TransmitData_Wait:
-	    	if(USART_IsSendReady(0))
+	    	if(USART_IsSendReady(0)){
 				state = TransmitData_Write;
-	    	else 
+	    	}
+	    	else {
 				state = TransmitData_Wait;
+				//PORTA = 0x00;
+	    	}
 	    	break;
 		case TransmitData_Write:
 	    	if(USART_HasTransmitted(0)){
 				state = TransmitData_Wait;
+				PORTA = 0x00;
 				USART_Flush(0);
 	    	}else
 				state = TransmitData_Write;
@@ -81,7 +84,8 @@ int TransmitDataTick(int state){
 		case TransmitData_Wait:
 	    	break;
 		case TransmitData_Write:
-	    	USART_Send(transmitValue, 0);
+	    	USART_Send(0x02, 0);
+	    	PORTA = 0x01;
 	    	break;
     }
     return state;
@@ -90,10 +94,11 @@ int TransmitDataTick(int state){
 //========================================================================
 
 int main(void) {
+	DDRA = 0xFF; PORTA = 0x00;
  	initUSART(0);
 
 	unsigned long int BlinkLEDsTick_calc = 1000;
-	unsigned long int TransmitDataTick_calc = 50;
+	unsigned long int TransmitDataTick_calc = 500;
 
 	// Calculate GCD
 	unsigned long int tmpGCD = findGCD(BlinkLEDsTick_calc, TransmitDataTick_calc);
