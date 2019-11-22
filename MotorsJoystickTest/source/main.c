@@ -27,7 +27,7 @@ unsigned short ADC_read(){
 unsigned char forwardCheck = 0x00;
 unsigned char backwardCheck = 0x00;
 
-
+//================== State Machines ======================================
 
 enum DCMotorState{DCMotorWait, DCMotorForward, DCMotorBackward};
 
@@ -35,11 +35,23 @@ int DCMotorTick(int state){
 	//	State Transitions
 	switch(state){
 		case DCMotorWait:
-			if(forwardCheck)
+			if(forwardCheck == 0x01)
 				state = DCMotorForward;
-			else if(backwardCheck)
+			else if(backwardCheck == 0x01)
 				state = DCMotorBackward;
 			else 
+				state = DCMotorWait;
+			break;
+		case DCMotorBackward:
+			if(backwardCheck == 0x01)
+				state = DCMotorBackward;
+			else
+				state = DCMotorWait;
+			break;
+		case DCMotorForward:
+			if(forwardCheck == 0x01)
+				state = DCMotorForward;
+			else
 				state = DCMotorWait;
 			break;
 		default:
@@ -78,10 +90,20 @@ int JoystickTick(int state){
 				state = Joystick_wait;
 	    	break;
 		case Joystick_forward:
-			state = Joystick_wait;
+			if(input >= 700)
+				state = Joystick_forward;
+	    	else if(input <= 300)
+				state = Joystick_backward;
+	    	else 
+				state = Joystick_wait;
 	    	break;
 		case Joystick_backward:
-			state = Joystick_wait;
+			if(input >= 700)
+				state = Joystick_forward;
+	    	else if(input <= 300)
+				state = Joystick_backward;
+	    	else 
+				state = Joystick_wait;
 	    	break;
 		default:
 	    	state = Joystick_wait;
@@ -107,7 +129,9 @@ int main(void) {
  	DDRA = 0x00; PORTA = 0xFF;		//	Setting first four pins to input and last four pins are output
  	DDRB = 0xFF; PORTB = 0x00;
 
- 	unsigned long int DCMotorTick_calc = 500;
+ 	ADC_init();
+
+ 	unsigned long int DCMotorTick_calc = 1;
 	unsigned long int JoystickTick_calc = 1;
 
 	// Calculate GCD
