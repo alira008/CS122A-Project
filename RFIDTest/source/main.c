@@ -18,6 +18,7 @@
 //----------------------------------------------
 
 unsigned char receivedData = 0x00;
+unsigned short cursorCount = 17;
 uint8_t str[900];
 uint8_t byte;
 
@@ -50,19 +51,33 @@ int DisplayLCDTick(int state){
 		case(RefreshLCD):
 	    	LCD_ClearScreen();
 	    	LCD_DisplayString(1, "Waiting for RFID");
-	    	LCD_Cursor(17);
+	    	LCD_Cursor(cursorCount);
 	    	break;
 	    case Found:
 	    	LCD_ClearScreen();
 			LCD_DisplayString(1, "Found card");
-			//byte = mfrc522_get_card_serial(str);
-			//if(byte == CARD_FOUND){
-			//	for(byte=0; byte < 8; byte++)
-			//		LCD_WriteData(str[byte]);
-			//}
-			// else{
-			// 	LCD_DisplayString(17,"Error");
-			// }
+			byte = mfrc522_get_card_serial(str);
+			if(byte == CARD_FOUND){
+				cursorCount = 17;
+				for(byte=0; byte < 8; byte++){
+					LCD_Cursor(cursorCount);
+					unsigned char temp = (str[byte] >> 4) & 0x0F;
+					if(temp <= 9)
+						LCD_WriteData('0' + temp);
+					else
+						LCD_WriteData('A' + temp - 0x0A);
+					cursorCount++;
+					temp = str[byte] & 0x0F;
+					if(temp <= 9)
+						LCD_WriteData('0' + temp);
+					else
+						LCD_WriteData('A' + temp - 0x0A);
+					cursorCount++;
+				}
+			}
+			else{
+				LCD_DisplayString(17,"Error");
+			}
 	    	break;
     }
     return state;
